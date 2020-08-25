@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using EnsoulSharp;
 using EnsoulSharp.SDK;
@@ -9,7 +9,7 @@ using EnsoulSharp.SDK.Utility;
 using System.Net;
 using System.Threading.Tasks;
 using System.Reflection;
-
+using System.Text.RegularExpressions;
 namespace DiablosRengar
 {
 
@@ -226,10 +226,15 @@ namespace DiablosRengar
         
         private static int QCount, ECount, WCount = 0;
         private static int HDCount = 0;
-        /*public static void Check()
+        public static void Check()
         {
             try
             {
+
+                Regex myRegex = new Regex("https://github.com/");
+                WebPermission myWebPermission = new WebPermission(NetworkAccess.Connect, myRegex);
+                myWebPermission.AddPermission(NetworkAccess.Accept, "https://github.com/MR-ElDiablo/Ensoul/blob/master/DiablosRengar/Version.txt");
+                myWebPermission.Demand();
                 bool wb = new WebClient().DownloadString("https://github.com/MR-ElDiablo/Ensoul/blob/master/DiablosRengar/Version.txt").Contains("1.0.0.0");
 
                
@@ -242,9 +247,9 @@ namespace DiablosRengar
                     Game.Print("Rengar Updated");
 
             }
-            catch
+            catch (Exception E)
             {
-                Game.Print("An error try again");
+                Console.WriteLine("An error try again" +E);
             }
         }
         public async Task Updater()
@@ -255,11 +260,11 @@ namespace DiablosRengar
                 await client.DownloadFileTaskAsync("", "");
                 Console.WriteLine("Downloaded");
             }
-            catch (Exception)
+            catch (Exception E)
             {
-                Console.WriteLine("Error When Downloading");
+                Console.WriteLine("Error When Downloading "+E );
             }
-        }*/
+        }
         static void Main(string[] args)
         {
            
@@ -275,7 +280,7 @@ namespace DiablosRengar
                 Console.WriteLine("Diablo Rengar Not Loaded");
                 return;
             }
-
+            //Check();
             /*try
             {
                 new Program().Updater().Wait();
@@ -389,9 +394,9 @@ namespace DiablosRengar
             if (C_GhostB && myhero.HasItem(3142) &&_youmuu.IsReady&& (int)newtarget.Position.DistanceToPlayer() <= C_GhostB_Range) { if (C_GhostB_R && RengarR) { _youmuu.Cast(); }
                 else if (!C_GhostB_R) { _youmuu.Cast(); }
             }
-            if (AfterAA && C_Hydra )
+            if (C_Hydra  && (dash || AfterAA))
             {
-
+                
                 if (_hydra.IsReady && _hydra.IsInRange(newtarget))
                 {
                     _hydra.Cast(); HDCount = Tok;
@@ -401,29 +406,30 @@ namespace DiablosRengar
                     _titanic.Cast(); HDCount = Tok;
                 }
                 else if (_tiamat.IsReady && _tiamat.IsInRange(newtarget)) { _tiamat.Cast(); HDCount = Tok; }
-                
+
 
             }
-            if (i < 4 && myhero.Mana!=4 && HDCount+300<Tok)
+            if (i < 4 && myhero.Mana!=4 )
             {
                 
-                if (C_Q && !dash && Q.CanCast(newtarget) && newtarget.InCurrentAutoAttackRange(75) && ECount + 350 < Tok && QCount + 200 < Tok && !OnAA && myhero.Mana != 4 && i < 4 && !RengarPassive &&!RengarR)
+                if (C_Q && !dash && Q.CanCast(newtarget) && newtarget.InCurrentAutoAttackRange(75) && ECount + 300 < Tok && QCount + 170 < Tok && !OnAA && myhero.Mana != 4 && i < 4 && RengarPassive&& (int)newtarget.Position.DistanceToPlayer() <=200 && !RengarR && HDCount + 300 < Tok)
                 {
                    
 
-                    if (!C_QAA) { Q.Cast(); }
-                        else if (C_QAA && AfterAA) { Q.Cast();}
+                    if (!C_QAA ) { Q.Cast(); }
+                    else if (C_QAA && AfterAA) { Q.Cast();}
                         
                 }
-                if (C_W && !dash) { _WCast(newtarget); }
-                if (C_E && !dash) { _ECast(newtarget); }
+                if (C_W) { _WCast(newtarget); }
+                if (C_E && !dash && HDCount + 300 < Tok) { _ECast(newtarget); }
                 
             }
+            
             if (R.IsReady() && C_R && (int)newtarget.Position.DistanceToPlayer()>C_RRange && newtarget.HealthPercent <=C_RHP  && !dash && ECount+500<Tok)
             {
                 R.Cast();
             }
-            if (myhero.Mana == 4 && !C_Save &&!CC_W)
+            if (myhero.Mana == 4 && !C_Save && !CC_W)
             {
                 switch (C_EMP)
                 {
@@ -592,16 +598,16 @@ namespace DiablosRengar
         {
             
             if (W.State == (SpellState.CooldownOrSealed) || W.State == SpellState.Disabled || W.State == SpellState.NotAvailable) return;
-            if (W.CanCast(Wtarget) && ECount + 300 < Tok && WCount + 150 < Tok && i<4 && !RengarR && !OnAA &&!dash)
+            if (W.CanCast(Wtarget) && ECount + 300 < Tok && WCount + 150 < Tok && i<4 && !RengarR)
             {
-                if (!RengarPassive  && !dash)
+                if (!RengarPassive)
                 {
                         W.Cast();
                         WCount = Tok;
                         i++;
                     
                 }
-                else if (RengarPassive && !(Wtarget.DistanceToPlayer()>200f) )
+                else if (RengarPassive && myhero.Mana!=0 )
                 {
                     W.Cast();
                     WCount = Tok;
@@ -627,16 +633,17 @@ namespace DiablosRengar
         private static void _ECast(AIBaseClient Etarget)
         {
             if (E.State == (SpellState.CooldownOrSealed) || E.State == SpellState.Disabled || E.State == SpellState.NotAvailable) { return; }
-            if (E.CanCast(Etarget) && ECount + 370 < Tok && i < 4 && !RengarR && QCount+100<Tok&& !OnAA)
+            if (E.CanCast(Etarget) && ECount + 370 < Tok && i < 4 && !RengarR && !OnAA)
             {
+                
                 var predE = E.GetPrediction(Etarget);
-                if (!RengarPassive && !dash && predE.Hitchance>=EChance()&& predE.CollisionObjects.Count==0 )
+                
+                if (!RengarPassive && !dash && predE.Hitchance >=EChance() && predE.CollisionObjects.Count==0)
                 {
                     
                         E.Cast(Etarget.Position);
                         ECount = Tok;
                         i++;
-
                 }
                 else if (RengarPassive && Etarget.Distance(myhero) < 200f && !dash && predE.Hitchance >= EChance() && predE.CollisionObjects.Count == 0)
                 {
@@ -666,7 +673,7 @@ namespace DiablosRengar
             if (E.State == (SpellState.CooldownOrSealed) || E.State == SpellState.Disabled || E.State == SpellState.NotAvailable) { return; }
             if (E.CanCast(Etarget) && ECount + 370 < Tok  && !RengarR)
             {
-               if (RengarPassive && Etarget.Position.DistanceToPlayer() < 200f && !dash)
+               if (RengarPassive && Etarget.Position.DistanceToPlayer() <= 200f && !dash)
                 {
                     if( EEmpChance() <= predE.Hitchance && predE.CollisionObjects.Count==0) {
                     E.Cast(Etarget.Position);
@@ -699,7 +706,7 @@ namespace DiablosRengar
                 case 3:
                     return HitChance.VeryHigh;
                 default:
-                    return HitChance.High;
+                    return HitChance.Low;
             }
         }
         private static HitChance EEmpChance()
