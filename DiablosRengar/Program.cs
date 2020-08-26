@@ -280,15 +280,6 @@ namespace DiablosRengar
                 Console.WriteLine("Diablo Rengar Not Loaded");
                 return;
             }
-            //Check();
-            /*try
-            {
-                new Program().Updater().Wait();
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Error When Updating");
-            }*/
 
             Q = new Spell(SpellSlot.Q);
             W = new Spell(SpellSlot.W, 450);
@@ -373,6 +364,7 @@ namespace DiablosRengar
                     if (C_E && i<4) { _EDashCast(newtarget); }
                     break;
                 case OrbwalkerMode.LaneClear:
+                    
                     break;
             }
         }
@@ -412,7 +404,7 @@ namespace DiablosRengar
             if (i < 4 && myhero.Mana!=4 )
             {
                 
-                if (C_Q && !dash && Q.CanCast(newtarget) && newtarget.InCurrentAutoAttackRange(75) && ECount + 300 < Tok && QCount + 170 < Tok && !OnAA && myhero.Mana != 4 && i < 4 && RengarPassive&& (int)newtarget.Position.DistanceToPlayer() <=200 && !RengarR && HDCount + 300 < Tok)
+                if (C_Q && !dash && Q.CanCast(newtarget) && newtarget.InCurrentAutoAttackRange(75) && ECount + 300 < Tok && QCount + 170 < Tok && !OnAA && myhero.Mana != 4 && i < 4 && !(RengarPassive&& myhero.Mana==0) && !RengarR && HDCount + 300 < Tok)
                 {
                    
 
@@ -467,28 +459,57 @@ namespace DiablosRengar
                 else if (_tiamat.IsReady && _tiamat.IsInRange(minons)) { _tiamat.Cast(); HDCount = Tok; }
 
             }
-            if (i < 4 && myhero.Mana != 4 && HDCount +300<Tok)
+           
+            if (!OnAA && LC_Hydra && ECount + 300 < Tok && !dash)
             {
-                if (Q.IsReady() && LC_Q && minons.IsValidTarget(500) && i != 4 && QCount + 200 < Tok && !OnAA)
-                {
-                    Q.Cast();
-                }
-                if (W.CanCast(minons) && LC_W && minons.IsValidTarget(W.Range)  && i < 4 && WCount + 200 < Tok && ECount + 300 < Tok && !OnAA)
-                {
-                    i++;
-                    W.Cast();
-                    WCount = Tok;
 
-                }
-                if (E.CanCast(minons) && LC_E && minons.IsValidTarget(E.Range)  && i < 4 && ECount + 400 < Tok && !OnAA)
-
+                if (_hydra.IsReady && _hydra.IsInRange(minons))
                 {
-                    E.Cast(minons.Position);
-                    ECount = Tok;
-
+                    _hydra.Cast(); HDCount = Tok;
                 }
+                else if (_titanic.IsReady && _titanic.IsInRange(minons))
+                {
+                    _titanic.Cast(); HDCount = Tok;
+                }
+                else if (_tiamat.IsReady && _tiamat.IsInRange(minons)) { _tiamat.Cast(); HDCount = Tok; }
+
             }
-            if (myhero.Mana == 4 && !LC_Save &&!CC_W)
+            if (myhero.Mana != 4 && i < 4)
+            {
+                if (Q.CanCast(minons) && LC_Q && minons.InCurrentAutoAttackRange(75) && i < 4 && ECount + 300 < Tok && QCount + 200 < Tok)
+                {
+                    if (!dash && AfterAA)
+                    {
+                        Q.Cast();
+                        QCount = Tok;
+                    }
+                    else if (dash)
+                    {
+                        Q.Cast();
+                        QCount = Tok;
+                        i++;
+                    }
+                }
+                if (W.CanCast(minons) && LC_W && minons.IsValidTarget(W.Range) && i < 4 && WCount + 200 < Tok && ECount + 300 < Tok && !OnAA && HDCount + 300 < Tok)
+                {
+                    if (!(RengarPassive && myhero.Mana == 0))
+                    {
+                        W.Cast();
+                        WCount = Tok;
+                        i++;
+                    }
+                    else if (!RengarPassive)
+                    {
+                        W.Cast();
+                        WCount = Tok;
+                        i++;
+                    }
+
+                }
+                if (LC_E && !dash) { _ECast(minons); }
+                else if (LC_E && HDCount + 300 < Tok && i < 4 && E.CanCast(minons) && ECount + 370 < Tok) { if (E.State == (SpellState.CooldownOrSealed) || E.State == SpellState.Disabled || E.State == SpellState.NotAvailable) { return; } E.Cast(minons.Position); i++; ECount = Tok; }
+            }
+                if (myhero.Mana == 4 && !LC_Save &&!CC_W)
             {
                 switch (LC_EMP)
                 {
@@ -519,7 +540,7 @@ namespace DiablosRengar
         {
             var mob = GameObjects.Jungle.OrderByDescending(j => j.Health).FirstOrDefault(j => j.IsValidTarget(E.Range));
             if (mob == null) { return; }
-            if (AfterAA && J_Hydra)
+            if (!OnAA && J_Hydra && ECount + 300 <Tok &&!dash)
             {
 
                 if (_hydra.IsReady && _hydra.IsInRange(mob))
@@ -533,27 +554,48 @@ namespace DiablosRengar
                 else if (_tiamat.IsReady && _tiamat.IsInRange(mob)) { _tiamat.Cast(); HDCount = Tok; }
 
             }
-            if (myhero.Mana != 4 && i < 4 && HDCount + 300 < Tok)
+            if (myhero.Mana != 4 && i < 4)
             {
-                if (Q.CanCast(mob) && J_Q && mob.IsValidTarget(500) && i < 4 && ECount + 300 < Tok && QCount + 200 < Tok && !OnAA && AfterAA)
+                if (Q.CanCast(mob) && J_Q && mob.InCurrentAutoAttackRange(75)&& i < 4 && ECount + 300 < Tok && QCount + 200 < Tok )
                 {
-                    Q.Cast();
-                    QCount = Tok;
+                    if (!dash && AfterAA) 
+                    {
+                        Q.Cast();
+                        QCount = Tok;
+                    }
+                    else if(dash)
+                    {
+                        Q.Cast();
+                        QCount = Tok;
+                        i++;
+                    }
                 }
-                if (W.CanCast(mob) && J_W && mob.IsValidTarget(W.Range) && i < 4 && WCount + 200 < Tok && ECount + 300 < Tok && !OnAA)
+                if (W.CanCast(mob) && J_W && mob.IsValidTarget(W.Range) && i < 4 && WCount + 200 < Tok && ECount + 300 < Tok && !OnAA &&HDCount+300<Tok)
                 {
-                    W.Cast();
-                    WCount = Tok;
-                    i++;
+                    if (!(RengarPassive && myhero.Mana == 0))
+                    {
+                        W.Cast();
+                        WCount = Tok;
+                        i++;
+                    }
+                    else if (!RengarPassive)
+                    {
+                        W.Cast();
+                        WCount = Tok;
+                        i++;
+                    }
 
                 }
+                if (J_E &&!dash ) { _ECast(mob); }
+                else if (J_E && HDCount + 300 < Tok && i < 4 && E.CanCast(mob) &&ECount+370<Tok) { if (E.State == (SpellState.CooldownOrSealed) || E.State == SpellState.Disabled || E.State == SpellState.NotAvailable) { return; } E.Cast(mob.Position); i++; ECount = Tok; }
+                /*
                 if (E.CanCast(mob) && J_E && mob.IsValidTarget(E.Range) && i < 4 && ECount + 400 < Tok && !OnAA)
                 {
                     E.Cast(mob.Position);
                     ECount = Tok;
                     i++;
 
-                }
+                }*/
             }
             if (myhero.Mana == 4 && !J_Save &&!CC_W)
             {
@@ -598,7 +640,7 @@ namespace DiablosRengar
         {
             
             if (W.State == (SpellState.CooldownOrSealed) || W.State == SpellState.Disabled || W.State == SpellState.NotAvailable) return;
-            if (W.CanCast(Wtarget) && ECount + 300 < Tok && WCount + 150 < Tok && i<4 && !RengarR)
+            if (W.CanCast(Wtarget) && ECount + 300 < Tok && WCount + 150 < Tok && i<4 && !RengarR && myhero.Mana!=4)
             {
                 if (!RengarPassive)
                 {
@@ -633,19 +675,19 @@ namespace DiablosRengar
         private static void _ECast(AIBaseClient Etarget)
         {
             if (E.State == (SpellState.CooldownOrSealed) || E.State == SpellState.Disabled || E.State == SpellState.NotAvailable) { return; }
-            if (E.CanCast(Etarget) && ECount + 370 < Tok && i < 4 && !RengarR && !OnAA)
+            if (E.CanCast(Etarget) && HDCount + 300 < Tok && ECount + 380 < Tok && i < 4 && !RengarR && !OnAA && myhero.Mana != 4 && !dash)
             {
                 
                 var predE = E.GetPrediction(Etarget);
                 
-                if (!RengarPassive && !dash && predE.Hitchance >=EChance() && predE.CollisionObjects.Count==0)
+                if (!RengarPassive  && predE.Hitchance >=EChance() && predE.CollisionObjects.Count==0)
                 {
                     
                         E.Cast(Etarget.Position);
                         ECount = Tok;
                         i++;
                 }
-                else if (RengarPassive && Etarget.Distance(myhero) < 200f && !dash && predE.Hitchance >= EChance() && predE.CollisionObjects.Count == 0)
+                else if (RengarPassive && myhero.Mana !=0 && predE.Hitchance >= EChance() && predE.CollisionObjects.Count == 0)
                 {
                     E.Cast(Etarget.Position);
                     ECount = Tok;
