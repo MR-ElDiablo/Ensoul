@@ -226,6 +226,45 @@ namespace DiablosRengar
         
         private static int QCount, ECount, WCount = 0;
         private static int HDCount = 0;
+        public static void Check()
+        {
+            try
+            {
+
+                Regex myRegex = new Regex("https://github.com/");
+                WebPermission myWebPermission = new WebPermission(NetworkAccess.Connect, myRegex);
+                myWebPermission.AddPermission(NetworkAccess.Accept, "https://github.com/MR-ElDiablo/Ensoul/blob/master/DiablosRengar/Version.txt");
+                myWebPermission.Demand();
+                bool wb = new WebClient().DownloadString("https://github.com/MR-ElDiablo/Ensoul/blob/master/DiablosRengar/Version.txt").Contains("1.0.0.0");
+
+               
+
+                if (wb)
+                {
+                    Game.Print("Rengar Oudated");
+                }
+                else
+                    Game.Print("Rengar Updated");
+
+            }
+            catch (Exception E)
+            {
+                Console.WriteLine("An error try again" +E);
+            }
+        }
+        public async Task Updater()
+        {
+            var client = new WebClient();
+            try
+            {
+                await client.DownloadFileTaskAsync("", "");
+                Console.WriteLine("Downloaded");
+            }
+            catch (Exception E)
+            {
+                Console.WriteLine("Error When Downloading "+E );
+            }
+        }
         static void Main(string[] args)
         {
            
@@ -241,7 +280,15 @@ namespace DiablosRengar
                 Console.WriteLine("Diablo Rengar Not Loaded");
                 return;
             }
-
+            //Check();
+            /*try
+            {
+                new Program().Updater().Wait();
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Error When Updating");
+            }*/
 
             Q = new Spell(SpellSlot.Q);
             W = new Spell(SpellSlot.W, 450);
@@ -347,7 +394,7 @@ namespace DiablosRengar
             if (C_GhostB && myhero.HasItem(3142) &&_youmuu.IsReady&& (int)newtarget.Position.DistanceToPlayer() <= C_GhostB_Range) { if (C_GhostB_R && RengarR) { _youmuu.Cast(); }
                 else if (!C_GhostB_R) { _youmuu.Cast(); }
             }
-            if (C_Hydra  && AfterAA  && ECount + 300<Tok)
+            if (C_Hydra  &&  AfterAA && ECount + 300<Tok)
             {
                 
                 if (_hydra.IsReady && _hydra.IsInRange(newtarget))
@@ -373,7 +420,7 @@ namespace DiablosRengar
                     else if (C_QAA && AfterAA) { Q.Cast();}
                         
                 }
-                if (C_W) { _WCast(newtarget); }
+                if (C_W && HDCount +300 <Tok) { _WCast(newtarget); }
                 if (C_E && !dash && HDCount + 300 < Tok) { _ECast(newtarget); }
                 
             }
@@ -538,7 +585,7 @@ namespace DiablosRengar
         private static void _QEmpCast (AIBaseClient QEmptarget)
         {
             
-            if (Q.CanCast(QEmptarget) && QEmptarget.InCurrentAutoAttackRange(400) && ECount + 320 < Tok  && !OnAA )
+            if (Q.CanCast(QEmptarget) && QEmptarget.InCurrentAutoAttackRange(400) )
             {
                 
                 Q.Cast();
@@ -553,7 +600,7 @@ namespace DiablosRengar
             if (W.State == (SpellState.CooldownOrSealed) || W.State == SpellState.Disabled || W.State == SpellState.NotAvailable) return;
             if (W.CanCast(Wtarget) && ECount + 300 < Tok && WCount + 150 < Tok && i<4 && !RengarR)
             {
-                if (!RengarPassive ))
+                if (!RengarPassive)
                 {
                         W.Cast();
                         WCount = Tok;
@@ -575,7 +622,7 @@ namespace DiablosRengar
 
             if (W.State == (SpellState.CooldownOrSealed) || W.State == SpellState.Disabled || W.State == SpellState.NotAvailable) return;
             
-            if (W.CanCast(Wtarget) && !RengarR && ECount+270 <Tok )
+            if (W.CanCast(Wtarget)  && WCount + 120 < Tok  && !RengarR && ECount+270 <Tok )
             {
                 W.Cast();
                 WCount = Tok;
