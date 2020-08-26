@@ -553,7 +553,7 @@ namespace DiablosRengar
             if (W.State == (SpellState.CooldownOrSealed) || W.State == SpellState.Disabled || W.State == SpellState.NotAvailable) return;
             if (W.CanCast(Wtarget) && ECount + 300 < Tok && WCount + 150 < Tok && i<4 && !RengarR)
             {
-                if (!RengarPassive)
+                if (!RengarPassive ))
                 {
                         W.Cast();
                         WCount = Tok;
@@ -575,7 +575,7 @@ namespace DiablosRengar
 
             if (W.State == (SpellState.CooldownOrSealed) || W.State == SpellState.Disabled || W.State == SpellState.NotAvailable) return;
             
-            if (W.CanCast(Wtarget)  && WCount + 120 < Tok  && !RengarR && ECount+270 <Tok )
+            if (W.CanCast(Wtarget) && !RengarR && ECount+270 <Tok )
             {
                 W.Cast();
                 WCount = Tok;
