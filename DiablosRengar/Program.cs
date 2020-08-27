@@ -20,14 +20,10 @@ namespace DiablosRengar
     {
 
         #region Decler
-        private static  float  hp1 =0, hp2 =0, hp3= 0, hp4=0, hp5=0, hp6 = 0, hp7=0;
-        private static int hp1t = 0, hp2t = 0, hp3t = 0, hp4t = 0, hp5t = 0, hp6t = 0, hp7t=0;
         private static Menu menu, combo, harass, laneclear, jungle, Uitem, misc;
         private static Items.Item _youmuu, _tiamat, _hydra, _titanic, _blade, _bilge, _rand, _lotis, _QSS;
         private static Spell Q, W, E, R;
-        //private static AIBaseClient target;
         private static bool dash, AfterAA, OnAA,QSSReady = false;
-        //private static int newtik; //used for delay on spellcasts
         private static sbyte i = 0; //used as counter for emp spells
        
         //private static bool CC_W = false; //CC check
