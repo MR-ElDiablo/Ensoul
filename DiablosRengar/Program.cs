@@ -10,20 +10,23 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Security.Permissions;
 namespace DiablosRengar
 {
 
-
+    [PermissionSet(SecurityAction.Assert, Unrestricted = true)]
     class Program
 
     {
 
-        # region Decler
+        #region Decler
+        private static  float  hp1 =0, hp2 =0, hp3= 0, hp4=0, hp5=0, hp6 = 0, hp7=0;
+        private static int hp1t = 0, hp2t = 0, hp3t = 0, hp4t = 0, hp5t = 0, hp6t = 0, hp7t=0;
         private static Menu menu, combo, harass, laneclear, jungle, Uitem, misc;
-        private static Items.Item _youmuu, _tiamat, _hydra, _titanic, _blade, _bilge, _rand, _lotis;
+        private static Items.Item _youmuu, _tiamat, _hydra, _titanic, _blade, _bilge, _rand, _lotis, _QSS;
         private static Spell Q, W, E, R;
         //private static AIBaseClient target;
-        private static bool dash, AfterAA, OnAA = false;
+        private static bool dash, AfterAA, OnAA,QSSReady = false;
         //private static int newtik; //used for delay on spellcasts
         private static sbyte i = 0; //used as counter for emp spells
        
@@ -53,7 +56,7 @@ namespace DiablosRengar
         private static bool C_Hydra => Uitem["HD"].GetValue<MenuBool>("C_HD");
         private static bool C_GhostB => Uitem["GH"].GetValue<MenuBool>("C_GH");
         private static int C_GhostB_Range => Uitem["GH"].GetValue<MenuSlider>("C_GH_Range").Value;
-
+        
         private static bool C_GhostB_R => Uitem["GH"].GetValue<MenuBool>("C_GH_Ult");
 
         /*harass
@@ -82,7 +85,7 @@ namespace DiablosRengar
         private static bool J_E => menu["Jungle"].GetValue<MenuBool>("JE");
         private static bool J_Hydra => Uitem["HD"].GetValue<MenuBool>("J_HD");
 
-
+        
         //misc
         //private static bool M_Eent => menu["misc"].GetValue<MenuBool>("AW");
 
@@ -92,22 +95,26 @@ namespace DiablosRengar
         #region Menu
         private static void OnMenuLoad()
         {
-            menu = new Menu("DRengar", "Diablos Rengar", true);
-            menu.Add(new MenuSeparator("DiablosRengar", "Diablos Rengar v1.0"));
-            combo = new Menu("combo", "combo");
-            combo.Add(new MenuBool("CSAVE", "Save Empowerd",false));
-            combo.Add(new MenuList("CEMP", "Empowerd", new string[] { "Q", "W", "E" }));
-            combo.Add(new MenuBool("CQ", "Use Q"));
-            combo.Add(new MenuBool("CQAA", "^After AA"));
-            combo.Add(new MenuBool("ICQAA", "^Ignore on Dash"));
-            combo.Add(new MenuBool("CW", "Use W"));
-            combo.Add(new MenuBool("CE", "Use E"));
-            combo.Add(new MenuList("EChance", " E Hitchance", new string[] { "Low", "Medium", "High", "Very High" }, 1));
-            combo.Add(new MenuList("EEmpChance", "Empwerd E Hitchance", new string[] { "Low", "Medium", "High", "Very High" }, 1));
-            combo.Add(new MenuBool("CEemp", "Use E Empowerd If Out Of Q Range"));
-            combo.Add(new MenuBool("CR", "Use R",false));
-            combo.Add(new MenuSlider("CR_HP", "^If Enemy Hp <", 50, 1, 100));
-            combo.Add(new MenuSlider("CR_Range", "Min Range To Ult <", 1000, 1, 2000));
+            menu = new Menu("DRengar", "Diablos Rengar", true)
+            {
+                new MenuSeparator("DiablosRengar", "Diablos Rengar v1.0")
+            };
+            combo = new Menu("combo", "combo")
+            {
+                new MenuBool("CSAVE", "Save Empowerd", false),
+                new MenuList("CEMP", "Empowerd", new string[] { "Q", "W", "E" }),
+                new MenuBool("CQ", "Use Q"),
+                new MenuBool("CQAA", "^- After AA (On=MoreDPS)"),
+                new MenuBool("ICQAA", "^- Ignore on Dash(On=Burst, Off=MoreDPS)"),
+                new MenuBool("CW", "Use W"),
+                new MenuBool("CE", "Use E"),
+                new MenuList("EChance", " E Hitchance", new string[] { "Low", "Medium", "High", "Very High" }, 1),
+                new MenuList("EEmpChance", "Empwerd E Hitchance", new string[] { "Low", "Medium", "High", "Very High" }, 1),
+                new MenuBool("CEemp", "Use E Empowerd If Out Of Q Range"),
+                new MenuBool("CR", "Use R", false),
+                new MenuSlider("CR_HP", "^If Enemy Hp <", 50, 1, 100),
+                new MenuSlider("CR_Range", "Min Range To Ult <", 1000, 1, 2000)
+            };
             menu.Add(combo);
             /*harass = new Menu("harass", "harass");
             harass.Add(new MenuList("HEMP", "Empowerd", new string[] { "Q", "W", "E" }));
@@ -121,99 +128,104 @@ namespace DiablosRengar
             menu.Add(harass);*/
 
 
-            laneclear = new Menu("laneclear", "LaneClear");
-            laneclear.Add(new MenuList("LCEMP", "Empowerd", new string[] { "Q", "W", "E" }));
-            laneclear.Add(new MenuBool("LCSAVE", "Save Empowerd", false)); ;
-            laneclear.Add(new MenuBool("LCQ", "Use Q"));
-            laneclear.Add(new MenuBool("LCW", "Use W"));
-            laneclear.Add(new MenuBool("LCE", "Use E"));
+            laneclear = new Menu("laneclear", "LaneClear")
+            {
+                new MenuList("LCEMP", "Empowerd", new string[] { "Q", "W", "E" }),
+                new MenuBool("LCSAVE", "Save Empowerd", false),
+                new MenuBool("LCQ", "Use Q"),
+                new MenuBool("LCW", "Use W"),
+                new MenuBool("LCE", "Use E")
+            };
             menu.Add(laneclear);
 
-            jungle = new Menu("Jungle", "JungleClear");
-            jungle.Add(new MenuList("JEMP", "Use Empowerd", new string[] { "Q", "W", "E"}));
-            jungle.Add(new MenuBool("JSAVE", "Save Empowerd",false));
-            jungle.Add(new MenuBool("JQ", "Use Q"));
-            jungle.Add(new MenuBool("JW", "Use W"));
-            jungle.Add(new MenuBool("JE", "Use E"));
+            jungle = new Menu("Jungle", "JungleClear")
+            {
+                new MenuList("JEMP", "Use Empowerd", new string[] { "Q", "W", "E" }),
+                new MenuBool("JSAVE", "Save Empowerd", false),
+                new MenuBool("JQ", "Use Q"),
+                new MenuBool("JW", "Use W"),
+                new MenuBool("JE", "Use E")
+            };
             menu.Add(jungle);
             Uitem = new Menu("Uitem", "Use Items");
-            Menu GhostBMenu = new Menu("GH", "Ghost Blade");
-            GhostBMenu.Add(new MenuBool("C_GH", "Use On Combo"));
-            GhostBMenu.Add(new MenuSlider("C_GH_Range", "Min Range To Use <", 1000, 1, 2000));
-            GhostBMenu.Add(new MenuBool("C_GH_Ult", "^Use Only With R"));
-            GhostBMenu.Add(new MenuBool("H_GH", "Use On Harass"));
+            Menu GhostBMenu = new Menu("GH", "Ghost Blade")
+            {
+                new MenuBool("C_GH", "Use On Combo"),
+                new MenuSlider("C_GH_Range", "Min Range To Use <", 1000, 1, 2000),
+                new MenuBool("C_GH_Ult", "^Use Only With R"),
+                new MenuBool("H_GH", "Use On Harass")
+            };
             Uitem.Add(GhostBMenu);
 
-            Menu HydraMenu = new Menu("HD", "Hydra/Titanic");
-            HydraMenu.Add(new MenuBool("C_HD", "Use On Combo"));
-            HydraMenu.Add(new MenuBool("H_HD", "Use On Harass"));
-            HydraMenu.Add(new MenuBool("LC_HD", "Use In LaneClear"));
-            HydraMenu.Add(new MenuBool("J_HD", "Use In Jungle"));
+            Menu HydraMenu = new Menu("HD", "Hydra/Titanic")
+            {
+                new MenuBool("C_HD", "Use On Combo"),
+                new MenuBool("H_HD", "Use On Harass"),
+                new MenuBool("LC_HD", "Use In LaneClear"),
+                new MenuBool("J_HD", "Use In Jungle")
+            };
             Uitem.Add(HydraMenu);
 
+            Menu QSS = new Menu("QSS", "QSS")
+            {
+                new MenuBool("Use_QSS", "Use QSS"),
+                new MenuBool("C_QSS_Only", "QSS Only In Combo")
+            };
+            Uitem.Add(QSS);
+            Menu C_QSS = new Menu("C_QSS", "Combo QSS list")
+            {
+                new MenuBool("Stun", "Stun"),
+                new MenuBool("Silence", "Silence"),
+                new MenuBool("Taunt", "Taunt"),
+                new MenuBool("Polymorph", "Polymorph"),
+                new MenuBool("Slow", "Slow"),
+                new MenuBool("Snare", "Snare"),
+                new MenuBool("Sleep", "Sleep"),
+                new MenuBool("Fear", "Fear"),
+                new MenuBool("Charm", "Charm"),
+                new MenuBool("Suppression", "Suppression"),
+                new MenuBool("Blind", "Blind"),
+                new MenuBool("Flee", "Flee"),
+                new MenuBool("Knockup", "KnockUp"),
+                new MenuBool("Knockback", "KnockBack"),
+                new MenuBool("Drowsy", "Drowsy"),
+                new MenuBool("Asleep", "Asleep")
+            };
+            QSS.Add(C_QSS);
             /*Menu BorkMenu = new Menu("BORK", "BORK");
             BorkMenu.Add(new MenuBool("C_BORK", "Use On Combo"));
             BorkMenu.Add(new MenuBool("H_BORK", "Use On Harass"));
             BorkMenu.Add(new MenuSlider("BorkEnemyhp", "If Enemy Hp <", 50, 1, 100));
             BorkMenu.Add(new MenuSlider("Borkmyhp", "Or Your Hp <", 85, 1, 100));
             Uitem.Add(BorkMenu);
-
-            Menu QSSMenu = new Menu("QSS", "QSS");
-            QSSMenu.Add(new MenuBool("C_QSS", "Use On Combo"));
-            Menu QSSComboMenu = new Menu("QSSCOMBO", "QSS Combo");
-            QSSComboMenu.Add(new MenuBool("QSSComb_Stun", "Stun"));
-            QSSComboMenu.Add(new MenuBool("QSSComb_Snare", "Snare"));
-            QSSComboMenu.Add(new MenuBool("QSSComb_Blind", "Blind"));
-            QSSComboMenu.Add(new MenuBool("QSSComb_Charm", "Charm"));
-            QSSComboMenu.Add(new MenuBool("QSSComb_Slow", "Slow"));
-            QSSComboMenu.Add(new MenuBool("QSSComb_KnockUp", "KnockUp"));
-            QSSComboMenu.Add(new MenuBool("QSSComb_Fear", "Fear"));
-            QSSComboMenu.Add(new MenuBool("QSSComb_Flee", "Flee"));
-            QSSComboMenu.Add(new MenuBool("QSSComb_Taunt", "Taunt"));
-            QSSComboMenu.Add(new MenuBool("QSSComb_Suppression", "Suppression"));
-            QSSComboMenu.Add(new MenuBool("QSSComb_Polymorph", "Polymorph"));
-            QSSComboMenu.Add(new MenuBool("QSSComb_Silence", "Silence"));
-
-            QSSMenu.Add(QSSComboMenu);
-            QSSMenu.Add(new MenuBool("Always_QSS", "Use Always"));
-            Menu QSSAlwaysMenu = new Menu("QSSAlways", "QSS Always");
-            QSSAlwaysMenu.Add(new MenuBool("QSSAlways_Stun", "Stun"));
-
-            QSSAlwaysMenu.Add(new MenuBool("QSSAlways_Silence", "Silence"));
-            QSSAlwaysMenu.Add(new MenuBool("QSSAlways_Snare", "Snare"));
-            QSSAlwaysMenu.Add(new MenuBool("QSSAlways_Blind", "Blind"));
-            QSSAlwaysMenu.Add(new MenuBool("QSSAlways_Charm", "Charm"));
-            QSSAlwaysMenu.Add(new MenuBool("QSSAlways_Slow", "Slow"));
-            QSSAlwaysMenu.Add(new MenuBool("QSSAlways_KnockUp", "KnockUp"));
-            QSSAlwaysMenu.Add(new MenuBool("QSSAlways_Fear", "Fear"));
-            QSSAlwaysMenu.Add(new MenuBool("QSSAlways_Flee", "Flee"));
-            QSSAlwaysMenu.Add(new MenuBool("QSSAlways_Taunt", "Taunt"));
-            QSSAlwaysMenu.Add(new MenuBool("QSSAlways_Suppression", "Suppression"));
-            QSSAlwaysMenu.Add(new MenuBool("QSSAlways_Polymorph", "Polymorph"));
-            QSSMenu.Add(QSSAlwaysMenu);
-            Uitem.Add(QSSMenu);*/
+*/
             menu.Add(Uitem);
 
 
-            misc = new Menu("misc", "Misc");
-            misc.Add(new MenuBool("M_W_CC", "Auto W CC"));
-            Menu WCC = new Menu("WCC", "^W List");
-            WCC.Add(new MenuBool("Stun", "Stun"));
-            WCC.Add(new MenuBool("Silence", "Silence"));
-            WCC.Add(new MenuBool("Taunt", "Taunt"));
-            WCC.Add(new MenuBool("Polymorph", "Polymorph"));
-            WCC.Add(new MenuBool("Slow", "Slow"));
-            WCC.Add(new MenuBool("Snare", "Snare"));
-            WCC.Add(new MenuBool("Sleep", "Sleep"));
-            WCC.Add(new MenuBool("Fear", "Fear"));
-            WCC.Add(new MenuBool("Charm", "Charm"));
-            WCC.Add(new MenuBool("Suppression", "Suppression"));
-            WCC.Add(new MenuBool("Blind", "Blind"));
-            WCC.Add(new MenuBool("Flee", "Flee"));
-            WCC.Add(new MenuBool("Knockup", "KnockUp"));
-            WCC.Add(new MenuBool("Knockback", "KnockBack"));
-            WCC.Add(new MenuBool("Drowsy", "Drowsy"));
-            WCC.Add(new MenuBool("Asleep", "Asleep"));
+            misc = new Menu("misc", "Misc")
+            {
+                new MenuBool("M_W_CC", "Auto W CC"),
+                new MenuBool("QSS_W", "Prefer W Over QSS")
+            };
+            Menu WCC = new Menu("WCC", "^W List")
+            {
+                new MenuBool("Stun", "Stun"),
+                new MenuBool("Silence", "Silence"),
+                new MenuBool("Taunt", "Taunt"),
+                new MenuBool("Polymorph", "Polymorph"),
+                new MenuBool("Slow", "Slow"),
+                new MenuBool("Snare", "Snare"),
+                new MenuBool("Sleep", "Sleep"),
+                new MenuBool("Fear", "Fear"),
+                new MenuBool("Charm", "Charm"),
+                new MenuBool("Suppression", "Suppression"),
+                new MenuBool("Blind", "Blind"),
+                new MenuBool("Flee", "Flee"),
+                new MenuBool("Knockup", "KnockUp"),
+                new MenuBool("Knockback", "KnockBack"),
+                new MenuBool("Drowsy", "Drowsy"),
+                new MenuBool("Asleep", "Asleep")
+            };
             misc.Add(WCC);
             //misc.Add(new MenuBool("M_W_Heal", "Auto W Heal"));
             //misc.Add(new MenuSlider("M_W_MaxHP", "Auto Heal If Max %HP<", 50, 0, 100));
@@ -223,7 +235,6 @@ namespace DiablosRengar
         }
 
         #endregion
-        
         private static int QCount, ECount, WCount = 0;
         private static int HDCount = 0;
         public static void Check()
@@ -231,40 +242,22 @@ namespace DiablosRengar
             try
             {
 
-                Regex myRegex = new Regex("https://github.com/");
-                WebPermission myWebPermission = new WebPermission(NetworkAccess.Connect, myRegex);
-                myWebPermission.AddPermission(NetworkAccess.Accept, "https://github.com/MR-ElDiablo/Ensoul/blob/master/DiablosRengar/Version.txt");
-                myWebPermission.Demand();
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
                 bool wb = new WebClient().DownloadString("https://github.com/MR-ElDiablo/Ensoul/blob/master/DiablosRengar/Version.txt").Contains("1.0.0.0");
-
-               
-
-                if (wb)
+                if (!wb)
                 {
-                    Game.Print("Rengar Oudated");
+                    Game.Print("<b><font Size='25' color='#0000b2'> Newer Version Avalible For Diablos Rengar</font></b>");
                 }
                 else
-                    Game.Print("Rengar Updated");
+                    Game.Print("<b><font Size='35' color='#FF0000'> Diablos Rengar Loaded</font></b>");
 
             }
             catch (Exception E)
             {
-                Console.WriteLine("An error try again" +E);
+                Console.WriteLine("An error try again " +E);
             }
         }
-        public async Task Updater()
-        {
-            var client = new WebClient();
-            try
-            {
-                await client.DownloadFileTaskAsync("", "");
-                Console.WriteLine("Downloaded");
-            }
-            catch (Exception E)
-            {
-                Console.WriteLine("Error When Downloading "+E );
-            }
-        }
+
         static void Main(string[] args)
         {
            
@@ -280,6 +273,8 @@ namespace DiablosRengar
                 Console.WriteLine("Diablo Rengar Not Loaded");
                 return;
             }
+            Check(); //if UPD
+ 
 
             Q = new Spell(SpellSlot.Q);
             W = new Spell(SpellSlot.W, 450);
@@ -287,6 +282,7 @@ namespace DiablosRengar
             E.SetSkillshot(0.25f, 140f, 1500f, true, SkillshotType.Line);
             R = new Spell(SpellSlot.R);
             _bilge = new Items.Item(3144, 450f);
+            _QSS = new Items.Item(3140,10);
             _blade = new Items.Item(3153, 450f);
             _hydra = new Items.Item(3074, 250f);
             _tiamat = new Items.Item(3077, 250f);
@@ -300,7 +296,6 @@ namespace DiablosRengar
             Orbwalker.OnAction += OrbAction;
             AIBaseClient.OnDoCast += OnDoCast;
             Dash.OnDash += Dashing;
-            Game.Print("<b><font Size='40' color='#FF0000'> Diablos Rengar</font></b>");
 
         }
         private static void OnUpdate(EventArgs args)
@@ -312,7 +307,11 @@ namespace DiablosRengar
                 Auto_W_CC();
             }
             else { CC_W = false; }
-            
+
+            if (!Uitem["QSS"].GetValue<MenuBool>("C_QSS_Only") && _QSS.IsOwned() && _QSS.IsReady)
+            {
+                Auto_QSS();
+            }
 
         }
         private static void OrbAction(Object sender, OrbwalkerActionArgs args)
@@ -333,6 +332,10 @@ namespace DiablosRengar
             {
                 case OrbwalkerMode.Combo:
                     Combo();
+                    if (Uitem["QSS"].GetValue<MenuBool>("C_QSS_Only") && _QSS.IsOwned() && _QSS.IsReady)
+                    {
+                        Auto_QSS();
+                    }
                     return;
                 case OrbwalkerMode.Harass:
                     //Harass();
@@ -386,6 +389,9 @@ namespace DiablosRengar
             if (C_GhostB && myhero.HasItem(3142) &&_youmuu.IsReady&& (int)newtarget.Position.DistanceToPlayer() <= C_GhostB_Range) { if (C_GhostB_R && RengarR) { _youmuu.Cast(); }
                 else if (!C_GhostB_R) { _youmuu.Cast(); }
             }
+            
+            
+            
             if (C_Hydra  &&  AfterAA && ECount + 300<Tok)
             {
                 
@@ -445,22 +451,7 @@ namespace DiablosRengar
 
             var minons = GameObjects.EnemyMinions.OrderByDescending(m => m.Health).FirstOrDefault(m => m.IsValidTarget(E.Range));
             if (minons == null) return;
-            if (AfterAA && LC_Hydra)
-            {
-
-                if (_hydra.IsReady && _hydra.IsInRange(minons))
-                {
-                    _hydra.Cast(); HDCount = Tok;
-                }
-                else if (_titanic.IsReady && _titanic.IsInRange(minons))
-                {
-                    _titanic.Cast(); HDCount = Tok;
-                }
-                else if (_tiamat.IsReady && _tiamat.IsInRange(minons)) { _tiamat.Cast(); HDCount = Tok; }
-
-            }
-           
-            if (!OnAA && LC_Hydra && ECount + 300 < Tok && !dash)
+            if (!OnAA && LC_Hydra && ECount + 300 < Tok && !dash )
             {
 
                 if (_hydra.IsReady && _hydra.IsInRange(minons))
@@ -490,7 +481,7 @@ namespace DiablosRengar
                         i++;
                     }
                 }
-                if (W.CanCast(minons) && LC_W && minons.IsValidTarget(W.Range) && i < 4 && WCount + 200 < Tok && ECount + 300 < Tok && !OnAA && HDCount + 300 < Tok)
+                if (W.CanCast(minons) && LC_W && minons.IsValidTarget(W.Range) && i < 4 && WCount + 200 < Tok && ECount + 300 < Tok && !OnAA && HDCount + 300 < Tok && myhero.Mana != 4)
                 {
                     if (!(RengarPassive && myhero.Mana == 0))
                     {
@@ -506,8 +497,8 @@ namespace DiablosRengar
                     }
 
                 }
-                if (LC_E && !dash) { _ECast(minons); }
-                else if (LC_E && HDCount + 300 < Tok && i < 4 && E.CanCast(minons) && ECount + 370 < Tok) { if (E.State == (SpellState.CooldownOrSealed) || E.State == SpellState.Disabled || E.State == SpellState.NotAvailable) { return; } E.Cast(minons.Position); i++; ECount = Tok; }
+                if (LC_E && !dash && myhero.Mana != 4) { _ECast(minons); }
+                else if (LC_E && HDCount + 300 < Tok && i < 4 && E.CanCast(minons) && ECount + 370 < Tok && myhero.Mana != 4) { if (E.State == (SpellState.CooldownOrSealed) || E.State == SpellState.Disabled || E.State == SpellState.NotAvailable) { return; } E.Cast(minons.Position); i++; ECount = Tok; }
             }
                 if (myhero.Mana == 4 && !LC_Save &&!CC_W)
             {
@@ -570,7 +561,7 @@ namespace DiablosRengar
                         i++;
                     }
                 }
-                if (W.CanCast(mob) && J_W && mob.IsValidTarget(W.Range) && i < 4 && WCount + 200 < Tok && ECount + 300 < Tok && !OnAA &&HDCount+300<Tok)
+                if (W.CanCast(mob) && J_W && mob.IsValidTarget(W.Range) && i < 4 && WCount + 200 < Tok && ECount + 300 < Tok && !OnAA &&HDCount+300<Tok &&myhero.Mana!=4)
                 {
                     if (!(RengarPassive && myhero.Mana == 0))
                     {
@@ -586,16 +577,9 @@ namespace DiablosRengar
                     }
 
                 }
-                if (J_E &&!dash ) { _ECast(mob); }
-                else if (J_E && HDCount + 300 < Tok && i < 4 && E.CanCast(mob) &&ECount+370<Tok) { if (E.State == (SpellState.CooldownOrSealed) || E.State == SpellState.Disabled || E.State == SpellState.NotAvailable) { return; } E.Cast(mob.Position); i++; ECount = Tok; }
-                /*
-                if (E.CanCast(mob) && J_E && mob.IsValidTarget(E.Range) && i < 4 && ECount + 400 < Tok && !OnAA)
-                {
-                    E.Cast(mob.Position);
-                    ECount = Tok;
-                    i++;
-
-                }*/
+                if (J_E &&!dash && myhero.Mana != 4) { _ECast(mob); }
+                else if (J_E && HDCount + 300 < Tok && i < 4 && E.CanCast(mob) &&ECount+370<Tok && myhero.Mana != 4) { if (E.State == (SpellState.CooldownOrSealed) || E.State == SpellState.Disabled || E.State == SpellState.NotAvailable) { return; } E.Cast(mob.Position); i++; ECount = Tok; }
+           
             }
             if (myhero.Mana == 4 && !J_Save &&!CC_W)
             {
@@ -767,8 +751,10 @@ namespace DiablosRengar
                     return HitChance.High;
             }
         }
+      
         private static void Auto_W_CC()
         {
+
             
             foreach (var buffType in (mybuff[])Enum.GetValues(typeof(mybuff)))
             {
@@ -784,6 +770,21 @@ namespace DiablosRengar
 
                 }
                 else CC_W = false;
+            }
+
+        }
+        private static void Auto_QSS()
+        {
+            
+            if (menu["misc"].GetValue<MenuBool>("QSS_W") && myhero.Mana ==4 )
+            { return; }
+            foreach (var buffType in (mybuff[])Enum.GetValues(typeof(mybuff)))
+            {
+                if (ObjectManager.Player.HasBuffOfType((BuffType)buffType) && Uitem["QSS"]["C_QSS"].GetValue<MenuBool>(buffType.ToString()))
+                {
+                    _QSS.Cast();
+                }
+
             }
 
         }
