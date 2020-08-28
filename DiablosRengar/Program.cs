@@ -776,13 +776,12 @@ namespace DiablosRengar
                     return HitChance.High;
             }
         }
-        private static void Auto_Smite()
+        private static void Auto_Smite()// credit kappa HD
         {
             if (_smite==null || !_smite.IsReady() || !menu["smite"].GetValue<MenuBool>("UseSmite")) {  return; }
             if (menu["smite"].GetValue<MenuBool>("UseSmiteJungle"))
             {
-                var mob = GameObjects.Jungle.OrderByDescending(j=>j.Health).FirstOrDefault(j=>j.IsValidTarget(500));
-                  
+                var mob = GameObjects.Jungle.OrderByDescending(j=>j.Health).FirstOrDefault(j=>j.IsValidTarget(500)); 
                 if (mob == null) {  return; }
                 if (mob.Health<myhero.GetSummonerSpellDamage(mob,SummonerSpell.Smite)) 
                 {
