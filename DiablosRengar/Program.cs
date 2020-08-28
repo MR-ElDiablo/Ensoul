@@ -8,8 +8,6 @@ using EnsoulSharp.SDK.Prediction;
 using EnsoulSharp.SDK.Utility;
 using System.Net;
 using System.Threading.Tasks;
-using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Security.Permissions;
 namespace DiablosRengar
 {
@@ -20,10 +18,18 @@ namespace DiablosRengar
     {
 
         #region Decler
-        private static Menu menu, combo, harass, laneclear, jungle, Uitem, misc;
-        private static Items.Item _youmuu, _tiamat, _hydra, _titanic, _blade, _bilge, _rand, _lotis, _QSS;
+        private static Menu menu, combo, harass, laneclear, jungle, Uitem, misc, smite;
+        private static Items.Item _youmuu, _tiamat, _hydra, _titanic, _blade, _bilge, _rand, _lotis, _QSS, _QSS_MC;
+        private static string[] jungleMinions = new string[] //stolen list from sko :D
+                               {
+                                        "SRU_Blue", "SRU_Gromp", "SRU_Murkwolf", "SRU_Razorbeak", "SRU_RiftHerald",
+                                        "SRU_Red", "SRU_Krug", "SRU_Dragon_Air", "SRU_Dragon_Water", "SRU_Dragon_Fire",
+                                        "SRU_Dragon_Elder", "SRU_Baron", "TT_Spiderboss", "TT_NWraith", "TT_NGolem", "TT_NWolf"
+                               };
+
         private static Spell Q, W, E, R;
-        private static bool dash, AfterAA, OnAA,QSSReady = false;
+        private static Spell _smite { get; set; }
+        private static bool dash =false , AfterAA =false, OnAA=false, QSSReady = false;
         private static sbyte i = 0; //used as counter for emp spells
        
         //private static bool CC_W = false; //CC check
@@ -36,7 +42,6 @@ namespace DiablosRengar
         private static bool C_Save => menu["combo"].GetValue<MenuBool>("CSAVE");
         private static bool C_Q => menu["combo"].GetValue<MenuBool>("CQ");
         private static bool C_QAA => menu["combo"].GetValue<MenuBool>("CQAA");
-        //private static bool C_QEmpAA=> menu["combo"].GetValue<MenuBool>("CEmpQAA");
         private static bool C_IQAA => menu["combo"].GetValue<MenuBool>("ICQAA");
         private static bool C_W => menu["combo"].GetValue<MenuBool>("CW");
         private static bool CC_W = false;
@@ -80,10 +85,8 @@ namespace DiablosRengar
         private static bool J_W => menu["Jungle"].GetValue<MenuBool>("JW");
         private static bool J_E => menu["Jungle"].GetValue<MenuBool>("JE");
         private static bool J_Hydra => Uitem["HD"].GetValue<MenuBool>("J_HD");
+      
 
-        
-        //misc
-        //private static bool M_Eent => menu["misc"].GetValue<MenuBool>("AW");
 
         public static AIHeroClient myhero => ObjectManager.Player;
 
@@ -143,6 +146,15 @@ namespace DiablosRengar
                 new MenuBool("JE", "Use E")
             };
             menu.Add(jungle);
+
+            smite = new Menu("smite", "Use Smite")
+            {
+                new MenuBool("UseSmite", "Use Smite"),
+                new MenuBool("UseSmiteJungle", "Use Smite On Jungle (big monsters)"),
+                //new MenuBool("UseSmiteChamp", "Use Smite On Enemy Champs")
+            };
+            menu.Add(smite);
+
             Uitem = new Menu("Uitem", "Use Items");
             Menu GhostBMenu = new Menu("GH", "Ghost Blade")
             {
@@ -152,7 +164,6 @@ namespace DiablosRengar
                 new MenuBool("H_GH", "Use On Harass")
             };
             Uitem.Add(GhostBMenu);
-
             Menu HydraMenu = new Menu("HD", "Hydra/Titanic")
             {
                 new MenuBool("C_HD", "Use On Combo"),
@@ -231,7 +242,7 @@ namespace DiablosRengar
         }
 
         #endregion
-        private static int QCount, ECount, WCount = 0;
+        private static int QCount=0, ECount=0, WCount = 0;
         private static int HDCount = 0;
         public static void Check()
         {
@@ -239,7 +250,7 @@ namespace DiablosRengar
             {
 
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                bool wb = new WebClient().DownloadString("https://github.com/MR-ElDiablo/Ensoul/blob/master/DiablosRengar/Version.txt").Contains("1.0.0.0");
+                bool wb = new WebClient().DownloadString("https://github.com/MR-ElDiablo/Ensoul/blob/master/DiablosRengar/Version.txt").Contains("1.0.0.1");
                 if (!wb)
                 {
                     Game.Print("<b><font Size='25' color='#0000b2'> Newer Version Avalible For Diablos Rengar</font></b>");
@@ -253,7 +264,6 @@ namespace DiablosRengar
                 Console.WriteLine("An error try again " +E);
             }
         }
-
         static void Main(string[] args)
         {
            
@@ -270,15 +280,17 @@ namespace DiablosRengar
                 return;
             }
             Check(); //if UPD
- 
+          
 
             Q = new Spell(SpellSlot.Q);
             W = new Spell(SpellSlot.W, 450);
             E = new Spell(SpellSlot.E, 1000);
             E.SetSkillshot(0.25f, 140f, 1500f, true, SkillshotType.Line);
             R = new Spell(SpellSlot.R);
+            _smite = new Spell(myhero.GetSpellSlot("summonersmite"), 500);
             _bilge = new Items.Item(3144, 450f);
-            _QSS = new Items.Item(3140,10);
+            _QSS = new Items.Item(3140, 10);
+            _QSS_MC = new Items.Item(3139, 10);
             _blade = new Items.Item(3153, 450f);
             _hydra = new Items.Item(3074, 250f);
             _tiamat = new Items.Item(3077, 250f);
@@ -286,6 +298,7 @@ namespace DiablosRengar
             _rand = new Items.Item(3143, 490f);
             _lotis = new Items.Item(3190, 590f);
             _youmuu = new Items.Item(3142, 10);
+            
             
             OnMenuLoad();
             Game.OnUpdate += OnUpdate;
@@ -308,11 +321,22 @@ namespace DiablosRengar
             {
                 Auto_QSS();
             }
-
+            else if(!Uitem["QSS"].GetValue<MenuBool>("C_QSS_Only") && _QSS_MC.IsOwned() && _QSS_MC.IsReady)
+                {
+                    Auto_QSS_MC();
+                }
+            Auto_Smite();
         }
         private static void OrbAction(Object sender, OrbwalkerActionArgs args)
         {
-
+            if (Uitem["QSS"].GetValue<MenuBool>("C_QSS_Only") && _QSS.IsOwned() && _QSS.IsReady)
+            {
+                Auto_QSS();
+            }
+            else if (Uitem["QSS"].GetValue<MenuBool>("C_QSS_Only") && _QSS_MC.IsOwned() && _QSS_MC.IsReady)
+                {
+                    Auto_QSS_MC();
+                }
             if (myhero.HasBuff("rengaroutofcombat") && myhero.Mana == 0) { i = 0; }
             if (args.Type == OrbwalkerType.OnAttack)
             {
@@ -327,11 +351,16 @@ namespace DiablosRengar
             switch (Orbwalker.ActiveMode)
             {
                 case OrbwalkerMode.Combo:
-                    Combo();
+
                     if (Uitem["QSS"].GetValue<MenuBool>("C_QSS_Only") && _QSS.IsOwned() && _QSS.IsReady)
                     {
                         Auto_QSS();
                     }
+                    else if (Uitem["QSS"].GetValue<MenuBool>("C_QSS_Only") && _QSS_MC.IsOwned() && _QSS_MC.IsReady)
+                    {
+                        Auto_QSS_MC();
+                    }
+                    Combo();
                     return;
                 case OrbwalkerMode.Harass:
                     //Harass();
@@ -382,11 +411,11 @@ namespace DiablosRengar
             var newtarget = TargetSelector.GetTarget(2000);
             
             if (newtarget == null) { return; }
+
+            
             if (C_GhostB && myhero.HasItem(3142) &&_youmuu.IsReady&& (int)newtarget.Position.DistanceToPlayer() <= C_GhostB_Range) { if (C_GhostB_R && RengarR) { _youmuu.Cast(); }
                 else if (!C_GhostB_R) { _youmuu.Cast(); }
             }
-            
-            
             
             if (C_Hydra  &&  AfterAA && ECount + 300<Tok)
             {
@@ -414,7 +443,7 @@ namespace DiablosRengar
                     else if (C_QAA && AfterAA) { Q.Cast();}
                         
                 }
-                if (C_W && HDCount +300 <Tok) { _WCast(newtarget); }
+                if (C_W && HDCount +300 <Tok &&!dash) { _WCast(newtarget); }
                 if (C_E && !dash && HDCount + 300 < Tok) { _ECast(newtarget); }
                 
             }
@@ -463,7 +492,7 @@ namespace DiablosRengar
             }
             if (myhero.Mana != 4 && i < 4)
             {
-                if (Q.CanCast(minons) && LC_Q && minons.InCurrentAutoAttackRange(75) && i < 4 && ECount + 300 < Tok && QCount + 200 < Tok)
+                if (Q.CanCast(minons) && LC_Q && minons.InCurrentAutoAttackRange(200) && i < 4 && ECount + 300 < Tok && QCount + 200 < Tok)
                 {
                     if (!dash && AfterAA)
                     {
@@ -496,7 +525,7 @@ namespace DiablosRengar
                 if (LC_E && !dash && myhero.Mana != 4) { _ECast(minons); }
                 else if (LC_E && HDCount + 300 < Tok && i < 4 && E.CanCast(minons) && ECount + 370 < Tok && myhero.Mana != 4) { if (E.State == (SpellState.CooldownOrSealed) || E.State == SpellState.Disabled || E.State == SpellState.NotAvailable) { return; } E.Cast(minons.Position); i++; ECount = Tok; }
             }
-                if (myhero.Mana == 4 && !LC_Save &&!CC_W)
+            if (myhero.Mana == 4 && !LC_Save &&!CC_W)
             {
                 switch (LC_EMP)
                 {
@@ -543,7 +572,7 @@ namespace DiablosRengar
             }
             if (myhero.Mana != 4 && i < 4)
             {
-                if (Q.CanCast(mob) && J_Q && mob.InCurrentAutoAttackRange(75)&& i < 4 && ECount + 300 < Tok && QCount + 200 < Tok )
+                if (Q.CanCast(mob) && J_Q && mob.InCurrentAutoAttackRange(200)&& i < 4 && ECount + 300 < Tok && QCount + 200 < Tok )
                 {
                     if (!dash && AfterAA) 
                     {
@@ -747,11 +776,32 @@ namespace DiablosRengar
                     return HitChance.High;
             }
         }
-      
+        private static void Auto_Smite()
+        {
+            if (_smite==null || !_smite.IsReady() || !menu["smite"].GetValue<MenuBool>("UseSmite")) {  return; }
+            if (menu["smite"].GetValue<MenuBool>("UseSmiteJungle"))
+            {
+                var mob = GameObjects.Jungle.OrderByDescending(j=>j.Health).FirstOrDefault(j=>j.IsValidTarget(500));
+                  
+                if (mob == null) {  return; }
+                if (mob.Health<myhero.GetSummonerSpellDamage(mob,SummonerSpell.Smite)) 
+                {
+                    foreach (string s in jungleMinions)
+                    {
+                        if (mob.Name.Contains(s)) { _smite.Cast(mob); }
+
+                    }
+                }
+                  
+                   
+                
+            }
+        }
         private static void Auto_W_CC()
         {
 
-            
+            if (!menu["misc"].GetValue<MenuBool>("QSS_W")&&(_QSS.IsOwned()&&_QSS.IsReady))
+            { return; }
             foreach (var buffType in (mybuff[])Enum.GetValues(typeof(mybuff)))
             {
                 if (ObjectManager.Player.HasBuffOfType((BuffType)buffType) && misc["WCC"].GetValue<MenuBool>(buffType.ToString()))
@@ -778,7 +828,22 @@ namespace DiablosRengar
             {
                 if (ObjectManager.Player.HasBuffOfType((BuffType)buffType) && Uitem["QSS"]["C_QSS"].GetValue<MenuBool>(buffType.ToString()))
                 {
-                    _QSS.Cast();
+                     _QSS.Cast(); 
+                }
+
+            }
+
+        }
+        private static void Auto_QSS_MC()
+        {
+
+            if (menu["misc"].GetValue<MenuBool>("QSS_W") && myhero.Mana == 4)
+            { return; }
+            foreach (var buffType in (mybuff[])Enum.GetValues(typeof(mybuff)))
+            {
+                if (ObjectManager.Player.HasBuffOfType((BuffType)buffType) && Uitem["QSS"]["C_QSS"].GetValue<MenuBool>(buffType.ToString()))
+                {
+                    _QSS_MC.Cast();
                 }
 
             }
