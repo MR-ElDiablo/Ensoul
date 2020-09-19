@@ -238,13 +238,13 @@ namespace Riven
             myhero.IssueOrder(GameObjectOrder.MoveTo, pos);
             if (QCount == 0)
             {
-                DelayAction.Add(delay - Game.Ping, () => Orbwalker.AttackState = true);
-                DelayAction.Add(delay - Game.Ping, () => Orbwalker.MovementState = true);
+                DelayAction.Add(delay, () => Orbwalker.AttackState = true);
+                DelayAction.Add(delay, () => Orbwalker.MovementState = true);
             }
             else
             {
-                DelayAction.Add(therddelay - Game.Ping, () => Orbwalker.AttackState = true);
-                DelayAction.Add(therddelay - Game.Ping, () => Orbwalker.MovementState = true);
+                DelayAction.Add(therddelay, () => Orbwalker.AttackState = true);
+                DelayAction.Add(therddelay, () => Orbwalker.MovementState = true);
             }
 
         }
