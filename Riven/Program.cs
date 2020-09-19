@@ -17,12 +17,10 @@ namespace Riven
         # region Decler
         private static float LastQ;
         private static Spell Q, W, E, R;
-        private static GameObject targ;
-        private static bool RBuff = false;
+        private static bool RBuff = false, CanR_2,qE=false;
         private static sbyte QCount = 0;
-        private static int LastTik;
-        private static int LastQs=0;
-        public static AIHeroClient myhero { get { return ObjectManager.Player; } }
+        private static int E_Timer=0;
+        public static AIHeroClient Player { get { return ObjectManager.Player; } }
         #endregion
 
         #region Menu
@@ -35,12 +33,13 @@ namespace Riven
             GameEvent.OnGameLoad += OnGameLoad;
         }
         private static bool AfterAA,OnAA,BeforeAA;
-        private static int tik = 0;
+        private static int getTime=> Variables.GameTimeTickCount;
         private static void OnMenuLoad()
         {
 
             var menu = new Menu("D_Riven", "Diablos Riven", true);
-            RivemMenu.Combo.AddToMainMenu(menu);
+            RivenMenu.Combo.AddToMainMenu(menu);
+            RivenMenu.Misc.AddToMainMenu(menu);
             menu.Attach();
 
         }
@@ -49,12 +48,11 @@ namespace Riven
             
             if (ObjectManager.Player.CharacterName != "Riven")
             {
-                Console.WriteLine("Diablo Riven Not Loaded");
                 return;
             }
 
-            Q = new Spell(SpellSlot.Q);
-            W = new Spell(SpellSlot.W);
+            Q = new Spell(SpellSlot.Q, 325);
+            W = new Spell(SpellSlot.W, 250);
             E = new Spell(SpellSlot.E, 250);
             R = new Spell(SpellSlot.R, 900);
             R.SetSkillshot(0.25f, 45, 1600, false, false, SkillshotType.Cone);
@@ -71,9 +69,13 @@ namespace Riven
 
         private static void OrbAction(object sender, OrbwalkerActionArgs args)
         {
-         
+            if (args.Type == OrbwalkerType.OnAttack)
+            {
+                return;
+            }
             if (args.Type == OrbwalkerType.AfterAttack) { AfterAA = true;  }
             else AfterAA = false;
+            
             switch (Orbwalker.ActiveMode)
             {
                 case OrbwalkerMode.Combo:
@@ -91,7 +93,7 @@ namespace Riven
 
         private static void OnUpdate(EventArgs args) //OnTick 
         {
-            if (myhero.IsDead)
+            if (Player.IsDead)
                 return;
         }
 
@@ -102,11 +104,48 @@ namespace Riven
         {
             var target = TargetSelector.GetTarget(1000);
             if (target == null) { return; }
-
-            if(Q.IsReady() && AfterAA )
+            bool useQ = RivenMenu.Combo.Q;
+            bool useW = RivenMenu.Combo.W;
+            bool useE = RivenMenu.Combo.E;
+     
+           if (Q.IsReady() && E.IsReady())
             {
-                    Q.CastOnUnit(target);
+                if (target.DistanceToPlayer()<=E.Range+Q.Range && useQ && useE )
+                {
+                    E.Cast(target.Position);
+                }
             }
+           else if (useE && E.IsReady())
+            {
+                if(target.DistanceToPlayer() <= E.Range) { E.Cast(target.Position); }
+
+            }
+           if(W.IsReady() && useW)
+            {
+                if (E_Timer + 250 < getTime && W.IsInRange(target))
+                {
+                    W.Cast();
+                }
+            }
+           if (Q.IsReady() && useQ )
+            {
+                if (E_Timer + 250 < getTime && E_Timer + 1500 > getTime&&LastQ+1000<=getTime && Q.IsInRange(target) &&RivenMenu.Combo.QGapClose)
+                {
+                    Q.CastOnUnit(target);
+
+                }
+                if (AfterAA && LastQ+200<=getTime)
+                {
+                    if (RivenMenu.Combo.QTarget)
+                    {
+                        Q.CastOnUnit(target);
+                    }
+                    else { Q.Cast(target.Position); }
+                }
+                
+
+            }
+
         }
        
         private static void OnAnimation(AIBaseClient sender, AIBaseClientPlayAnimationEventArgs args)
@@ -117,51 +156,51 @@ namespace Riven
 
                 case "Spell1a": //1st Q
                    
-                   // QCount = 1;
-                  // DelayAction.Add(4000, SetQRange);
-
-                   //DelayAction.Add(100, Reset);
+                    QCount = 1;
+                    LastQ = getTime;
+                    DelayAction.Add(3500, SetQRange);
                     break;
 
                 case "Spell1b": //2ndQ
-                    //LastQ = Variables.GameTimeTickCount;
-                    //QCount=2;
-                    //SetQRange();
-                    //DelayAction.Add(4000, SetQRange);
-                    //DelayAction.Add(40, Reset);
+                    QCount = 2;
+                    LastQ = getTime;
+                    SetQRange();
+                    DelayAction.Add(3500, SetQRange);
                     break;
 
                 case "Spell1c": //3rd Q
                     //QCount =0;
                     //SetQRange();
-                    //DelayAction.Add(40, Reset);
-                    QCount = 1;
+                    LastQ = getTime;
+                    QCount = 3;
                     DelayAction.Add(200, () => QCount = 0);
                     break;
 
-                case "Spell3": //W
-                    DelayAction.Add(250, ()=>Orbwalker.ResetAutoAttackTimer());
+                case "Spell2": //W
+                    break;
+
+                case "Spell3": //E
+                    E_Timer = getTime;
                     break;
 
                 case "Spell4a": //R Use
                     W.Range = 300;
                     RBuff = true;
+                    CanR_2 = true;
                     SetQRange();
                     DelayAction.Add(14950, () => RBuff = false);
-                    DelayAction.Add(15000, () => W.Range = 250);
-                    DelayAction.Add(14990, SetQRange);
-                    Orbwalker.ResetAutoAttackTimer();
+                    DelayAction.Add(14600, () => W.Range = 250);
+                    DelayAction.Add(14500, SetQRange);
                     break;
-                    case "Spell4b": //2nd R cast
 
-                    Orbwalker.ResetAutoAttackTimer();
-                    break;
+                    case "Spell4b": //2nd R cast
+                        CanR_2 = false;
+                        break;
+                default: break;
 
             }
 
-            
-
-    }
+        }
 
         private static void OnCast(AIBaseClient sender, AIBaseClientProcessSpellCastEventArgs args)
         {
@@ -173,7 +212,6 @@ namespace Riven
 
                 Orbwalker.AttackState = false;
                 Orbwalker.MovementState = false;
-                //targ=args.Target;
                 DelayAction.Add(150,Reset);
    
             }
@@ -184,6 +222,7 @@ namespace Riven
 
 
             if (!sender.IsMe) { return; }
+            
             if (args.SData.Name == Q.SData.Name)
             {
                
@@ -192,61 +231,63 @@ namespace Riven
 
         private static void SetQRange()
         {
-
-            if ((LastQ + 3800) >= Variables.GameTimeTickCount && QCount != 0 )
+            if ((LastQ + 3500) <= getTime && QCount != 0)
             {
 
-                if (QCount == 2) //3rd Q range
+                if (RivenMenu.Misc.KeepQ)
                 {
-                    if (RBuff == true) //active R                       
-                    { Q.Range = 300; }
-                    else
-                    { Q.Range = 200; }
-                }
-                else
-                {
-                    if (RBuff == false) //active R                       
-                    { Q.Range = 150; }
-                    else
-                    { Q.Range = 200; }
+                    Q.Cast(Game.CursorPos);
                 }
             }
-
+            if (QCount == 2)//3rd Q
+            {
+                if (RBuff) //active R                       
+                { Q.Range = 475; }
+                else
+                { Q.Range = 400; }
+            }
             else
             {
-                if (RBuff == true)
-                { Q.Range = 200; }
+                if (RBuff )
+                { Q.Range = 375; }
                 else
-                { Q.Range = 150; }
+                { Q.Range = 300; }
 
-                QCount = 0;
             }
+        
 
         }
 
         private static void Reset() //moves to mouse for spell animationcancel
         {
 
-            int delay = RivemMenu.Combo.Delay.Value;
-            int therddelay = RivemMenu.Combo.TherdQDelay.Value;
-            var playerDi = myhero.Direction;
-            var pos = myhero.Position;
+            
+            int delay = RivenMenu.Misc.Delay.Value; 
+            int therddelay = RivenMenu.Misc.ThirdQDelay.Value;
+            var playerDi = Player.Direction;
+            var pos =Player.Position;
+            
             if (playerDi.X < 0) { pos.X +=100; }
             else { pos.X -= 100; }
             if (playerDi.Y < 0) { pos.Y += 100; }
-            else { pos.Y -= 100; }
-            myhero.IssueOrder(GameObjectOrder.MoveTo, pos);
-            if (QCount == 0)
-            {
-                DelayAction.Add(delay, () => Orbwalker.AttackState = true);
-                DelayAction.Add(delay, () => Orbwalker.MovementState = true);
-            }
             else
             {
-                DelayAction.Add(therddelay, () => Orbwalker.AttackState = true);
-                DelayAction.Add(therddelay, () => Orbwalker.MovementState = true);
+                pos.Y -= 100;
             }
+            
+            Player.IssueOrder(GameObjectOrder.MoveTo, pos);
+            if (QCount != 3)
+                {
+                    DelayAction.Add(delay, () => Orbwalker.AttackState = true);
+                    DelayAction.Add(delay, () => Orbwalker.MovementState = true);
+                }
+            else
+                {
 
+                    DelayAction.Add(therddelay, () => Orbwalker.AttackState = true);
+                    DelayAction.Add(therddelay, () => Orbwalker.MovementState = true);
+                }
+            
         }
 
 
