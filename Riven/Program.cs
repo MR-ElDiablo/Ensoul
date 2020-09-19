@@ -229,7 +229,13 @@ namespace Riven
 
             int delay = RivemMenu.Combo.Delay.Value;
             int therddelay = RivemMenu.Combo.TherdQDelay.Value;
-            myhero.IssueOrder(GameObjectOrder.MoveTo, myhero.Position.Extend(myhero.Direction.Rotated(180), 100));
+            var playerDi = myhero.Direction;
+            var pos = myhero.Position;
+            if (playerDi.X < 0) { pos.X +=100; }
+            else { pos.X -= 100; }
+            if (playerDi.Y < 0) { pos.Y += 100; }
+            else { pos.Y -= 100; }
+            myhero.IssueOrder(GameObjectOrder.MoveTo, pos);
             if (QCount == 0)
             {
                 DelayAction.Add(delay - Game.Ping, () => Orbwalker.AttackState = true);
