@@ -17,8 +17,8 @@ namespace Riven
                 W = new MenuBool("W", "W");
                 E = new MenuBool("E", "E");
                 R = new MenuBool("R", "R");
-                Delay = new MenuSlider("Delay","Delay",0,0,1000);
-                TherdQDelay= new MenuSlider("Therd Q Delay", "Therd Q Delay", 0, 0, 1000);
+                Delay = new MenuSlider("Delay","Delay",170,0,1000);
+                TherdQDelay= new MenuSlider("Therd Q Delay", "Therd Q Delay", 250, 0, 1000);
                 menu.Add(Q);
                 menu.Add(W);
                 menu.Add(E);
