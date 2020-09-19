@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using EnsoulSharp;
 using EnsoulSharp.SDK;
@@ -9,6 +9,7 @@ using EnsoulSharp.SDK.Utility;
 using SharpDX;
 
 
+
 namespace Riven
 {
     class  Program
@@ -16,6 +17,7 @@ namespace Riven
         # region Decler
         private static float LastQ;
         private static Spell Q, W, E, R;
+        private static GameObject targ;
         private static bool RBuff = false;
         private static sbyte QCount = 0;
         private static int LastTik;
@@ -101,7 +103,7 @@ namespace Riven
             var target = TargetSelector.GetTarget(1000);
             if (target == null) { return; }
 
-            if(Q.IsReady() && AfterAA &&!myhero.IsWindingUp)
+            if(Q.IsReady() && AfterAA )
             {
                     Q.CastOnUnit(target);
             }
@@ -166,12 +168,13 @@ namespace Riven
           
 
             if (!sender.IsMe) { return; }
-            
             if(args.SData.Name == Q.SData.Name)
             {
 
                 Orbwalker.AttackState = false;
-                DelayAction.Add(100,Reset);
+                Orbwalker.MovementState = false;
+                //targ=args.Target;
+                DelayAction.Add(150,Reset);
    
             }
         }
@@ -226,12 +229,17 @@ namespace Riven
 
             int delay = RivemMenu.Combo.Delay.Value;
             int therddelay = RivemMenu.Combo.TherdQDelay.Value;
+            myhero.IssueOrder(GameObjectOrder.MoveTo, myhero.Position.Extend(myhero.Direction.Rotated(180), 100));
             if (QCount == 0)
             {
-                DelayAction.Add(delay + Game.Ping, () => Orbwalker.AttackState = true);
-                
+                DelayAction.Add(delay - Game.Ping, () => Orbwalker.AttackState = true);
+                DelayAction.Add(delay - Game.Ping, () => Orbwalker.MovementState = true);
             }
-            else DelayAction.Add(therddelay+Game.Ping, () => Orbwalker.AttackState = true);
+            else
+            {
+                DelayAction.Add(therddelay - Game.Ping, () => Orbwalker.AttackState = true);
+                DelayAction.Add(therddelay - Game.Ping, () => Orbwalker.MovementState = true);
+            }
 
         }
 
