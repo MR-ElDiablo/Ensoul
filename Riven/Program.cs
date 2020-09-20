@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using EnsoulSharp;
 using EnsoulSharp.SDK;
 using EnsoulSharp.SDK.MenuUI;
@@ -33,7 +34,7 @@ namespace Riven
             GameEvent.OnGameLoad += OnGameLoad;
         }
         private static bool AfterAA,OnAA,BeforeAA;
-        private static int getTime=> Variables.GameTimeTickCount;
+        private static int getTime=> Environment.TickCount;
         private static void OnMenuLoad()
         {
 
@@ -73,9 +74,11 @@ namespace Riven
             {
                 return;
             }
-            if (args.Type == OrbwalkerType.AfterAttack) { AfterAA = true;  }
+            if (args.Type == OrbwalkerType.AfterAttack)
+            {
+                AfterAA = true;
+            }
             else AfterAA = false;
-            
             switch (Orbwalker.ActiveMode)
             {
                 case OrbwalkerMode.Combo:
@@ -104,37 +107,29 @@ namespace Riven
         {
             var target = TargetSelector.GetTarget(1000);
             if (target == null) { return; }
-            bool useQ = RivenMenu.Combo.Q;
-            bool useW = RivenMenu.Combo.W;
-            bool useE = RivenMenu.Combo.E;
-     
-           if (Q.IsReady() && E.IsReady())
+           if (RivenMenu.Combo.E && E.IsReady())
             {
-                if (target.DistanceToPlayer()<=E.Range+Q.Range && useQ && useE )
+               if(target.DistanceToPlayer() <= E.Range) { E.Cast(target.Position); }
+               else if (target.DistanceToPlayer() <= E.Range + Q.Range && RivenMenu.Combo.Q && Q.IsReady())
                 {
                     E.Cast(target.Position);
                 }
-            }
-           else if (useE && E.IsReady())
-            {
-                if(target.DistanceToPlayer() <= E.Range) { E.Cast(target.Position); }
 
             }
-           if(W.IsReady() && useW)
+           else if(W.IsReady() && RivenMenu.Combo.W)
             {
                 if (E_Timer + 250 < getTime && W.IsInRange(target))
                 {
                     W.Cast();
                 }
             }
-           if (Q.IsReady() && useQ )
+           else if (Q.IsReady() && RivenMenu.Combo.Q && LastQ+300<=getTime)
             {
                 if (E_Timer + 250 < getTime && E_Timer + 1500 > getTime&&LastQ+1000<=getTime && Q.IsInRange(target) &&RivenMenu.Combo.QGapClose)
                 {
                     Q.CastOnUnit(target);
-
                 }
-                if (AfterAA && LastQ+200<=getTime)
+                else if (AfterAA &&!Player.IsWindingUp)
                 {
                     if (RivenMenu.Combo.QTarget)
                     {
@@ -142,10 +137,12 @@ namespace Riven
                     }
                     else { Q.Cast(target.Position); }
                 }
-                
-
+                else if(RivenMenu.Combo.QGapClose && E_Timer + 1500 < getTime && !(RivenMenu.Combo.E && E.IsReady(2000))&&!target.InCurrentAutoAttackRange(100) )
+                {
+                    Q.CastOnUnit(target);
+                }
             }
-
+           
         }
        
         private static void OnAnimation(AIBaseClient sender, AIBaseClientPlayAnimationEventArgs args)
@@ -175,11 +172,13 @@ namespace Riven
                     QCount = 3;
                     DelayAction.Add(200, () => QCount = 0);
                     break;
-
+                    
                 case "Spell2": //W
+                    DelayAction.Add(350, ()=>Orbwalker.ResetAutoAttackTimer());
                     break;
 
                 case "Spell3": //E
+
                     E_Timer = getTime;
                     break;
 
@@ -207,7 +206,7 @@ namespace Riven
           
 
             if (!sender.IsMe) { return; }
-            if(args.SData.Name == Q.SData.Name)
+            if (args.SData.Name == Q.SData.Name)
             {
 
                 Orbwalker.AttackState = false;
@@ -215,6 +214,7 @@ namespace Riven
                 DelayAction.Add(150,Reset);
    
             }
+          
         }
 
         private static void OnProcessCast(AIBaseClient sender, AIBaseClientProcessSpellCastEventArgs args)
@@ -223,9 +223,9 @@ namespace Riven
 
             if (!sender.IsMe) { return; }
             
-            if (args.SData.Name == Q.SData.Name)
+            if (args.SData.Name == W.SData.Name)
             {
-               
+
             }
         }
 
@@ -261,7 +261,6 @@ namespace Riven
         private static void Reset() //moves to mouse for spell animationcancel
         {
 
-            
             int delay = RivenMenu.Misc.Delay.Value; 
             int therddelay = RivenMenu.Misc.ThirdQDelay.Value;
             var playerDi = Player.Direction;
@@ -280,13 +279,15 @@ namespace Riven
                 {
                     DelayAction.Add(delay, () => Orbwalker.AttackState = true);
                     DelayAction.Add(delay, () => Orbwalker.MovementState = true);
-                }
+
+
+            }
             else
-                {
+            {
 
                     DelayAction.Add(therddelay, () => Orbwalker.AttackState = true);
                     DelayAction.Add(therddelay, () => Orbwalker.MovementState = true);
-                }
+            }
             
         }
 
