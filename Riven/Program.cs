@@ -130,7 +130,7 @@ namespace Riven
                     R.Cast(rpred);
                 } 
             }
-            else if (W.IsReady() && RivenMenu.Combo.W)
+            if (W.IsReady() && RivenMenu.Combo.W)
             {
                 if (E_Timer + 250 < getTime && W.IsInRange(target))
                 {
