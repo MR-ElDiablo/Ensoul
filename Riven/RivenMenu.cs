@@ -1,4 +1,4 @@
-﻿using EnsoulSharp.SDK.MenuUI;
+using EnsoulSharp.SDK.MenuUI;
 using EnsoulSharp.SDK.MenuUI.Values;
 
 namespace Riven
@@ -7,26 +7,30 @@ namespace Riven
     {
         public class Combo
         {
-            public static MenuBool Q,QTarget,QGapClose, W, E, R;
-            private static MenuSeparator QSep;
+            public static MenuBool Q,QTarget,QGapClose, W, E, R1,R2,RMax;
+            public static MenuSlider R1HP;
             public static void AddToMainMenu(Menu MainMenu)
             {
 
                 var menu = new Menu("Combo", "Combo");
-                QSep = new MenuSeparator("Qsep", "Q Settings");
                 Q = new MenuBool("Q", "Use Q");
                 QTarget = new MenuBool("QTarget", "Q On Target");
                 QGapClose = new MenuBool("QGap", "Q To GapClose ");
-                W = new MenuBool("W", "W");
-                E = new MenuBool("E", "E");
-                R = new MenuBool("R", "R");
-                menu.Add(QSep);
+                W = new MenuBool("W", "Use W");
+                E = new MenuBool("E", "Use E");
+                R1 = new MenuBool("R1", "Use R1");
+                R1HP= new MenuSlider("R1HP", "Use R1 If Enemy Hp",50,1,100);
+                R2 = new MenuBool("R2", "Use R2");
+                RMax = new MenuBool("RMax", "R2 Max DMG");
                 menu.Add(Q);
                 menu.Add(QTarget);
                 menu.Add(QGapClose);
                 menu.Add(W);
                 menu.Add(E);
-                menu.Add(R);
+                menu.Add(R1);
+                menu.Add(R1HP);
+                menu.Add(R2);
+                menu.Add(RMax);
                 MainMenu.Add(menu);
             }/*
             private static void OnMenuLoad()
