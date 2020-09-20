@@ -52,7 +52,7 @@ namespace Riven
                 return;
             }
 
-            Q = new Spell(SpellSlot.Q, 325);
+            Q = new Spell(SpellSlot.Q, 400);
             W = new Spell(SpellSlot.W, 250);
             E = new Spell(SpellSlot.E, 250);
             R = new Spell(SpellSlot.R, 900);
@@ -107,7 +107,7 @@ namespace Riven
         {
             var target = TargetSelector.GetTarget(1000);
             if (target == null) { return; }
-           if (RivenMenu.Combo.E && E.IsReady())
+            if (RivenMenu.Combo.E && E.IsReady())
             {
                if(target.DistanceToPlayer() <= E.Range) { E.Cast(target.Position); }
                else if (target.DistanceToPlayer() <= E.Range + Q.Range && RivenMenu.Combo.Q && Q.IsReady())
@@ -116,20 +116,34 @@ namespace Riven
                 }
 
             }
-           else if(W.IsReady() && RivenMenu.Combo.W)
+            if(RivenMenu.Combo.R1 && !CanR_2 &&R.IsReady())
+            {
+                if(E_Timer + 250 < getTime && target.HealthPercent<=RivenMenu.Combo.R1HP)
+                {
+                    R.Cast();
+                }
+            }
+            else if(RivenMenu.Combo.R2 && CanR_2) {
+                var rpred = R.GetPrediction(target).CastPosition;
+                if ( target.Health / target.MaxHealth <= 0.25  && E_Timer + 400 < getTime && R.IsInRange(rpred) &&RivenMenu.Combo.RMax)
+                {
+                    R.Cast(rpred);
+                } 
+            }
+            else if (W.IsReady() && RivenMenu.Combo.W)
             {
                 if (E_Timer + 250 < getTime && W.IsInRange(target))
                 {
                     W.Cast();
                 }
             }
-           else if (Q.IsReady() && RivenMenu.Combo.Q && LastQ+300<=getTime)
+            else if (Q.IsReady() && RivenMenu.Combo.Q && LastQ + 300 <= getTime)
             {
-                if (E_Timer + 250 < getTime && E_Timer + 1500 > getTime&&LastQ+1000<=getTime && Q.IsInRange(target) &&RivenMenu.Combo.QGapClose)
+                if (E_Timer + 250 < getTime && E_Timer + 1500 > getTime && LastQ + 1000 <= getTime && Q.IsInRange(target) && RivenMenu.Combo.QGapClose)
                 {
                     Q.CastOnUnit(target);
                 }
-                else if (AfterAA &&!Player.IsWindingUp)
+                else if (AfterAA && !Player.IsWindingUp)
                 {
                     if (RivenMenu.Combo.QTarget)
                     {
@@ -137,12 +151,12 @@ namespace Riven
                     }
                     else { Q.Cast(target.Position); }
                 }
-                else if(RivenMenu.Combo.QGapClose && E_Timer + 1500 < getTime && !(RivenMenu.Combo.E && E.IsReady(2000))&&!target.InCurrentAutoAttackRange(100) )
+                else if (RivenMenu.Combo.QGapClose && E_Timer + 1500 < getTime && !(RivenMenu.Combo.E && E.IsReady(2000)) && !target.InCurrentAutoAttackRange(100))
                 {
                     Q.CastOnUnit(target);
                 }
             }
-           
+
         }
        
         private static void OnAnimation(AIBaseClient sender, AIBaseClientPlayAnimationEventArgs args)
@@ -242,16 +256,16 @@ namespace Riven
             if (QCount == 2)//3rd Q
             {
                 if (RBuff) //active R                       
-                { Q.Range = 475; }
+                { Q.Range = 575; }
                 else
-                { Q.Range = 400; }
+                { Q.Range = 500; }
             }
             else
             {
                 if (RBuff )
-                { Q.Range = 375; }
+                { Q.Range = 475; }
                 else
-                { Q.Range = 300; }
+                { Q.Range = 400; }
 
             }
         
