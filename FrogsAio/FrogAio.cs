@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using EnsoulSharp.SDK;
 using Froggy;
 using EnsoulSharp.SDK.MenuUI;
@@ -34,11 +34,13 @@ namespace ForggyAio
                     case "Riven":
                         Riven.OnGameLoad();
                         break;
+
                     case "Ezrail":
                         Ezrail.OnGameLoad();
                         break;
                 }
-                if(menu["SkinChanger"].GetValue<MenuBool>().Enabled) SkinChanger.OnLoad();
+
+                if(menu["SkinChanger"].GetValue<MenuBool>().Enabled) SkinChangers.OnLoad();
 
             }
             catch (Exception e)
