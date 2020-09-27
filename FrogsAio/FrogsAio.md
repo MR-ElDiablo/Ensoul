@@ -1,4 +1,5 @@
-Beta Release:
+Beta Release,
+
 Supported Champions: Thresh / Riven / Blitzcrank
 Cooming Soon. Jhin, Ezreal, FrogsRengar.   
 
