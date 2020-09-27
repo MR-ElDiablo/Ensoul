@@ -35,9 +35,6 @@ namespace ForggyAio
                         Riven.OnGameLoad();
                         break;
 
-                    case "Ezrail":
-                        Ezrail.OnGameLoad();
-                        break;
                 }
 
                 if(menu["SkinChanger"].GetValue<MenuBool>().Enabled) SkinChangers.OnLoad();
