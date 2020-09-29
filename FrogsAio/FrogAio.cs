@@ -48,6 +48,11 @@ namespace ForggyAio
                             var rivenOnLoad = riven.GetMethod("OnGameLoad");
                             rivenOnLoad.Invoke(null, null);
                             break;
+                    case "Ezreal":
+                            
+                            var Ezreal = load.GetType("Froggy.Ezreal");
+                            var EzrealOnLoad = Ezreal.GetMethod("OnGameLoad");
+                            EzrealOnLoad.Invoke(null, null);
 
                 }
 
