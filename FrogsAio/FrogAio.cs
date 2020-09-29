@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using EnsoulSharp.SDK;
 using EnsoulSharp.SDK.MenuUI;
 using EnsoulSharp.SDK.MenuUI.Values;
@@ -49,12 +49,13 @@ namespace ForggyAio
                             rivenOnLoad.Invoke(null, null);
                             break;
                     case "Ezreal":
-                            
-                            var Ezreal = load.GetType("Froggy.Ezreal");
-                            var EzrealOnLoad = Ezreal.GetMethod("OnGameLoad");
-                            EzrealOnLoad.Invoke(null, null);
 
-                }
+                            var ezreal = load.GetType("Froggy.Ezreal");
+                            var ezrealLoad = ezreal.GetMethod("OnGameLoad");
+                            ezrealLoad.Invoke(null, null);
+                            break;
+
+                    }
 
                 if (menu["SkinChangersz"].GetValue<MenuBool>().Enabled)
                 {
