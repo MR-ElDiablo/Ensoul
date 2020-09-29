@@ -16,4 +16,5 @@ Supported Champions: Thresh / Riven / Blitzcrank, Ezreal
 Cooming Soon: Jhin, FrogsRengar.   
 
 Discord Server: https://discord.gg/YjYbeHm
+
 Or you can give feedback/bug-report to my Discord: Diablo#0228
