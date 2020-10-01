@@ -38,7 +38,7 @@ namespace ForggyAio
                             break;
                     case "Blitzcrank":
 
-                            var blitz = load.GetType("Froggy.FrogBlitzcrank");
+                            var blitz = load.GetType("Froggy.Blitzcrank");
                             var blitzOnLoad = blitz.GetMethod("OnGameLoad");
                             blitzOnLoad.Invoke(null, null);
                         break;
