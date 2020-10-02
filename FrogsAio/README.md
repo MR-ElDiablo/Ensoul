@@ -1,5 +1,5 @@
 
-<b>My Discord Supported Champions </b> : 
+<b> Supported Champions </b> : 
 Thresh / Riven / Blitzcrank/ Ezreal /Jhin
 
 <b> Cooming Soon </b>: 
@@ -30,6 +30,6 @@ Beta Release V 0.0.0.3
 Supported champions: Riven, Thresh, BlitzCrank. 
 SkinChanger(credit~FunnySlayer)
 
-Discord Server: https://discord.gg/YjYbeHm
+<b>Discord Server</b>: https://discord.gg/YjYbeHm
 
-Or you can give feedback/bug-report to my Discord: Diablo#0228
+<b> My Discord</b>: Diablo#0228
