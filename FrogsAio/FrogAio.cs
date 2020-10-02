@@ -3,6 +3,7 @@ using EnsoulSharp.SDK;
 using EnsoulSharp.SDK.MenuUI;
 using EnsoulSharp.SDK.MenuUI.Values;
 using System.Security.Permissions;
+using EnsoulSharp;
 
 namespace ForggyAio
 {
@@ -20,16 +21,14 @@ namespace ForggyAio
             try
             {
                 var load = System.Reflection.Assembly.Load(FroggyAio.Resource.FroggyLib);
-
-                menu = new Menu("FroggyAioz", "FroggyAio", true)
+                menu = new Menu("FroggyAio", "FroggyAio", true)
                 {
                     new MenuSeparator("setz", "Press F5 2x To Apply"),
-                    new MenuBool("ChampionScriptsz", "Use Frogs Champ"),
-                    new MenuBool("SkinChangersz", "Use Frogs SkinChanger")
+                    new MenuBool("FroggyChamps", "Use Frogs Champ"),
+                    new MenuBool("FroggySkin", "Use Frogs SkinChanger")
                 };
                 menu.Attach();
-
-                if (menu["ChampionScriptsz"].GetValue<MenuBool>().Enabled) switch (GameObjects.Player.CharacterName)
+                if (menu["FroggyChamps"].GetValue<MenuBool>().Enabled) switch (GameObjects.Player.CharacterName)
                 {
                     case "Thresh":
                             var getType = load.GetType("Froggy.Program");
@@ -37,13 +36,11 @@ namespace ForggyAio
                             loadTh.Invoke(null, null);
                             break;
                     case "Blitzcrank":
-
-                            var blitz = load.GetType("Froggy.Blitzcrank");
+                            var blitz = load.GetType("Froggy.FrogBlitzcrank");
                             var blitzOnLoad = blitz.GetMethod("OnGameLoad");
                             blitzOnLoad.Invoke(null, null);
                         break;
                     case "Riven":
-                            
                             var riven = load.GetType("Froggy.Riven");
                             var rivenOnLoad = riven.GetMethod("OnGameLoad");
                             rivenOnLoad.Invoke(null, null);
@@ -54,10 +51,14 @@ namespace ForggyAio
                             var ezrealLoad = ezreal.GetMethod("OnGameLoad");
                             ezrealLoad.Invoke(null, null);
                             break;
+                    case "Jhin":
+                            var jhin = load.GetType("Froggy.Jhin");
+                            var jhinLoad = jhin.GetMethod("OnGameLoad");
+                            jhinLoad.Invoke(null, null);
+                            break;
 
                     }
-
-                if (menu["SkinChangersz"].GetValue<MenuBool>().Enabled)
+                if (menu["FroggySkin"].GetValue<MenuBool>().Enabled)
                 {
 
                     var kappaSkin = load.GetType("Froggy.SkinChangers");
