@@ -1,10 +1,11 @@
 
-#Supported Champions: 
+<b>My Discord Supported Champions </b> : 
 Thresh / Riven / Blitzcrank/ Ezreal /Jhin
 
-Cooming Soon: FrogsRengar.
+<b> Cooming Soon </b>: 
+FrogsRengar.
 
-ChangeLog: 
+<b> ChangeLog </b>:
 
 Beta Release V 0.0.0.6
 
