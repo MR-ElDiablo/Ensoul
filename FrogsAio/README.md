@@ -1,19 +1,32 @@
+
+Supported Champions: Thresh / Riven / Blitzcrank/ Ezreal /Jhin
+
+Cooming Soon: FrogsRengar.
+
+ChangeLog: 
+
+Beta Release V 0.0.0.6
+
+Added Froggy Jhin
+
+Fixed Blitz ks bugs
+
+
+Beta Release V 0.0.0.5
+
+Fixed Ezreal Ult bug and minons collision checks.
+
 Beta Release V 0.0.0.4
 
-Changes: Added Ezrail, Updated Riven Basic/Flash Combo
+Changes: Added Ezreal, Updated Riven Basic/Flash Combo
 
 
 
 
 Beta Release V 0.0.0.3
 
-Supported Champions: Thresh / Riven / Blitzcrank, Ezreal
-
-
-
-
-
-Cooming Soon: Jhin, FrogsRengar.   
+Supported champions: Riven, Thresh, BlitzCrank. 
+SkinChanger(credit~FunnySlayer)
 
 Discord Server: https://discord.gg/YjYbeHm
 
