@@ -1,5 +1,6 @@
 
-Supported Champions: Thresh / Riven / Blitzcrank/ Ezreal /Jhin
+#Supported Champions: 
+Thresh / Riven / Blitzcrank/ Ezreal /Jhin
 
 Cooming Soon: FrogsRengar.
 
